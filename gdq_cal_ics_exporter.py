@@ -108,8 +108,11 @@ def get_fatales_names_lowered() -> set:
 
 def get_schedule() -> list:
     logging.debug("Fetching GDQ event data from API...")
+    requests_headers = {
+        "User-Agent": "GDQ-Calendars/1.0 <pyrox@pyrox.dev>"
+    }
     try:
-        response = requests.get(GDQ_EVENT_URL)
+        response = requests.get(GDQ_EVENT_URL, headers=requests_headers)
         response.raise_for_status()
         logging.debug(f"Successfully fetched schedule. Status Code: {response.status_code}")
         global EVENT_DATA
@@ -370,6 +373,9 @@ def main():
         if event_name_words[1] == "Fatales":
             GDQ_EVENT_NAME = " ".join(event_name_words[:1])
             INCLUDE_FATALES_ONLY_CAL = False
+        # GDQueer events, same as Fatales
+        elif event_name_words[2] == "Queer":
+            GDQ_EVENT_NAME="GDQueer"
         else:
             # if a non-fatales event, use the shortened form of the name.
             # Don't take the last word since that's the year.
