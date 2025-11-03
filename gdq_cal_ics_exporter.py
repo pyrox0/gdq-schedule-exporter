@@ -379,7 +379,9 @@ def main():
             INCLUDE_FATALES_ONLY_CAL = False
         # GDQueer events, same as Fatales
         elif event_name_words[2] == "Queer":
-            GDQ_EVENT_NAME="GDQueer"
+            GDQ_EVENT_NAME = "GDQueer"
+        elif event_name_words[3] == "Express":
+            GDQ_EVENT_NAME = "GDQX"
         else:
             # if a non-fatales event, use the shortened form of the name.
             # Don't take the last word since that's the year.
