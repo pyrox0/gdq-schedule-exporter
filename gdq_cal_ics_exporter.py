@@ -45,6 +45,11 @@ def parse_args():
         action='store_true',
         help='Enable creating google calendars automatically(default: False)'
     )
+    parser.add_argument(
+        '--disable_general',
+        action='store_true',
+        help='Disable creating general calendars(default: False)'
+    )
     return parser.parse_args()
 
 def configure_logging(loglevel):
@@ -87,6 +92,8 @@ global FATALES_GCAL_EVENTS
 FATALES_GCAL_EVENTS: list[EventResource] = []
 global ENABLE_GCAL
 ENABLE_GCAL: bool = False
+global DISABLE_GENERAL_CAL
+DISABLE_GENERAL_CAL: bool = False
 
 # functions
 def read_file_as_list(file_name):
@@ -148,7 +155,7 @@ def find_or_create_google_calendars(service: Resource, timezone: str):
         },
         'role': 'reader',
     }
-    if not GENERAL_CAL_ID:
+    if (not GENERAL_CAL_ID and not DISABLE_GENERAL_CAL):
         cal = {
             'summary': GENERAL_CAL_NAME,
             'timeZone': timezone
@@ -157,6 +164,9 @@ def find_or_create_google_calendars(service: Resource, timezone: str):
         service.acl().insert(calendarId=new_cal['id'], body=acl).execute()
         logging.info(f"Did not find a calendar for {GDQ_EVENT_NAME} {GDQ_EVENT_YEAR}, created one!")
         GENERAL_CAL_ID = new_cal['id']
+    elif DISABLE_GENERAL_CAL:
+        # If we disable general calendar, skip it
+        pass
     else:
         # If we have an existing calendar, fetch all events from it for updates later.
         req = service.events().list(calendarId=GENERAL_CAL_ID)
@@ -353,6 +363,7 @@ def main():
     global EVENT_TIMEZONE
     global INCLUDE_FATALES_ONLY_CAL
     global ENABLE_GCAL
+    global DISABLE_GENERAL_CAL
     args = parse_args()
     configure_logging(args.loglevel)
     INCLUDE_FATALES_ONLY_CAL = args.fatales
@@ -364,6 +375,8 @@ def main():
     GDQ_EVENT_URL = f'https://gamesdonequick.com/api/schedule/{GDQ_EVENT_ID}'
     if args.gcal:
         ENABLE_GCAL = True
+    if args.disable_general:
+        DISABLE_GENERAL_CAL = True
 
 
     try:
@@ -409,7 +422,7 @@ def main():
         logging.info("Starting ICS creation...")
         event_cal, event_batch = create_cal(schedule_data, cal_service=cal_service) # schedule without Fatales filter
         create_ics(event_cal)
-        if ENABLE_GCAL:
+        if (ENABLE_GCAL and not DISABLE_GENERAL_CAL):
             logging.info("Creating general schedule with Google Calendar...")
             event_batch.execute()
 
