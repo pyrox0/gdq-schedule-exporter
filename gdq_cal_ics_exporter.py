@@ -31,7 +31,7 @@ def parse_args():
     )
     parser.add_argument(
         '--id',
-        required=True,
+        required=False,
         type=int,
         help="The event ID to run for"
     )
@@ -356,7 +356,11 @@ def main():
     args = parse_args()
     configure_logging(args.loglevel)
     INCLUDE_FATALES_ONLY_CAL = args.fatales
-    GDQ_EVENT_ID = args.id
+    if not args.id:
+        with open("id.txt", "r") as f:
+            GDQ_EVENT_ID = int(f.readline())
+    else:
+        GDQ_EVENT_ID = args.id
     GDQ_EVENT_URL = f'https://gamesdonequick.com/api/schedule/{GDQ_EVENT_ID}'
     if args.gcal:
         ENABLE_GCAL = True
